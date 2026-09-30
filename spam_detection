@@ -1,0 +1,117 @@
+
+# ==========================================================
+# STEP 1: Import the required libraries
+# ==========================================================
+
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+
+# ==========================================================
+# STEP 2: Load the dataset
+# ==========================================================
+
+df = pd.read_csv("spam_dataset.csv")
+
+print("Dataset Preview:")
+print(df.head())
+
+print("\nDataset Shape:", df.shape)
+
+
+# ==========================================================
+# STEP 3: Separate input features (X) and target labels (y)
+# ==========================================================
+
+X = df["text"]       # Input: original messages
+y = df["label"]      # Output: spam or ham
+
+print("\nInput Messages:")
+print(X.head())
+
+print("\nOutput Labels:")
+print(y.head())
+
+
+# ==========================================================
+# STEP 4: Split the dataset into training and testing data
+# ==========================================================
+
+X_train_text, X_test_text, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("\nTraining Messages:", len(X_train_text))
+print("Testing Messages:", len(X_test_text))
+
+
+# ==========================================================
+# STEP 5: Convert text into numerical features using TF-IDF 
+# since linear regression uses text values as input
+# ==========================================================
+
+vectorizer = TfidfVectorizer()
+
+# Learn the vocabulary and convert training messages
+X_train = vectorizer.fit_transform(X_train_text)
+
+# Convert test messages using the same vocabulary
+X_test = vectorizer.transform(X_test_text)
+
+print("\nTraining Features Shape:", X_train.shape)
+print("Testing Features Shape:", X_test.shape)
+
+
+# ==========================================================
+# STEP 6: Create and train the Logistic Regression model
+# ==========================================================
+
+model = LogisticRegression()
+
+model.fit(X_train, y_train)
+
+print("\nModel training completed!")
+
+
+# ==========================================================
+# STEP 7: Predict labels for the test messages
+# ==========================================================
+
+y_pred = model.predict(X_test)
+
+print("\nPredicted Labels:")
+print(y_pred)
+
+
+# ==========================================================
+# STEP 8: Compare input messages, actual labels, and predictions
+# ==========================================================
+
+results = pd.DataFrame({
+    "Input Message": X_test_text.values,
+    "Actual Label": y_test.values,
+    "Predicted Label": y_pred
+})
+
+print("\nTest Results:")
+print(results.to_string(index=False))
+
+
+# ==========================================================
+# STEP 9: Evaluate the model
+# ==========================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nModel Accuracy:", round(accuracy * 100, 2), "%")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
